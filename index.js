@@ -22,19 +22,32 @@ let tasks = [
 ];
 
 // GET /tasks - Get all tasks
-app.get('/tasks', (req, res) => {
-    res.json(tasks);
+app.get('/tasks', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM tasks');
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
 });
 
 // POST /tasks - Add a new task
-app.post('/tasks', (request, response) => {
-    const { id, description, status } = request.body;
-    if (!id || !description || !status) {
-        return response.status(400).json({ error: 'All fields (id, description, status) are required' });
+app.post('/tasks', async (req, res) => {
+    try {
+        const { description, status } = req.body;
+        if (!description || !status) {
+            return res.status(400).json({ error: 'All Fields (Description, Status) Are Required'});
+        }
+        const result = await pool.query(
+            'INSERT INTO tasks (description, status) VALUES ($1, $2) RETURNING *',
+            [description, status]
+        );
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
     }
-
-    tasks.push({ id, description, status });
-    response.status(201).json({ message: 'Task added successfully' });
 });
 
 // PUT /tasks/:id - Update a task's status
