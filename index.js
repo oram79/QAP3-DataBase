@@ -16,10 +16,21 @@ const pool = new Pool({
 
 app.use(express.json());
 
-let tasks = [
-    { id: 1, description: 'Buy groceries', status: 'incomplete' },
-    { id: 2, description: 'Read a book', status: 'complete' },
-];
+async function createTable() {
+    try {
+        await pool.query(
+            `CREATE TABLE IF NOT EXISTS tasks (
+            id SERIAL PRIMARY KEY,
+            description TEXT NOT NULL,
+            status TEXT NOT NULL
+            );`
+        );
+        console.log("Table Created Successfully");
+    } catch (error) {
+        console.error("Table Couldn't Be Created", error)
+    }
+}
+createTable();
 
 // GET /tasks - Get all tasks
 app.get('/tasks', async (req, res) => {
@@ -51,28 +62,41 @@ app.post('/tasks', async (req, res) => {
 });
 
 // PUT /tasks/:id - Update a task's status
-app.put('/tasks/:id', (request, response) => {
-    const taskId = parseInt(request.params.id, 10);
-    const { status } = request.body;
-    const task = tasks.find(t => t.id === taskId);
+app.put('/tasks/:id', async (req, res) => {
+    try {
+        const taskId = parseInt(req.params.id, 10);
+        const { status } = req.body;
 
-    if (!task) {
-        return response.status(404).json({ error: 'Task not found' });
+        const result = await pool.query(
+            'UPDATE tasks SET status = $1 WHERE id = $2 RETURNING *',
+            [status, taskId]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Task Not Found '});
+        }
+        res.json({ message: 'Task Updated Successfully', task: result.rows[0] });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
     }
-    task.status = status;
-    response.json({ message: 'Task updated successfully' });
 });
 
 // DELETE /tasks/:id - Delete a task
-app.delete('/tasks/:id', (request, response) => {
-    const taskId = parseInt(request.params.id, 10);
-    const initialLength = tasks.length;
-    tasks = tasks.filter(t => t.id !== taskId);
-
-    if (tasks.length === initialLength) {
-        return response.status(404).json({ error: 'Task not found' });
+app.delete('/tasks/:id', async (req, res) => {
+    try {
+        const taskId = parseInt(req.params.id, 10);
+        const result = await pool.query(
+            'DELETE FROM tasks WHERE id = $1 RETURNING *',
+            [taskId]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Task Not Found'});
+        }
+        res.json({ message: 'Task Deleted Successfully'});
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
     }
-    response.json({ message: 'Task deleted successfully' });
 });
 
 app.listen(PORT, () => {
