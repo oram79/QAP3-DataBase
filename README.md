@@ -1,6 +1,3 @@
-# Express Task Manager
-This repository serves as a **template** for the Task Manager application, used in your assignment. It provides a basic Express.js app with in-memory storage to manage tasks. Your task is to extend this application by integrating it with a PostgreSQL database.
-
 ## Setup Instructions  
 
 ### Prerequisites  
@@ -76,20 +73,3 @@ Your assignment is to replace the in-memory storage with a PostgreSQL database.
 ### **Delete a task**
 - **Method:** `DELETE`
 - **Endpoint:** `/tasks/:id`
-
-## Assignment Instructions
-
-### Part 1: PostgreSQL Integration
-
-1. Replace the `tasks` array in the code with a PostgreSQL database table. Ensure a method exists in the code to create that table if it does not already exist
-1. Update the application to interact with the PostgreSQL database:
-   - **GET /tasks:** Fetch all tasks from the database.
-   - **POST /tasks:** Add a new task to the database.
-   - **PUT /tasks/:id:** Update the status of a specific task in the database.
-   - **DELETE /tasks/:id:** Delete a specific task from the database.
-
-### Submission Requirements
-
-- Push all your changes to your repository.
-- Ensure your application runs correctly with `npm start`
-- Include all required functionality as specified in the assignment description.
